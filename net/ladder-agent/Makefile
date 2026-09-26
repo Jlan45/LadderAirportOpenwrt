@@ -3,10 +3,9 @@ include $(TOPDIR)/rules.mk
 PKG_NAME:=ladder-agent
 PKG_RELEASE:=1
 
-# Prefer CI/env override; else describe the linked LadderAirport checkout.
+# Main monorepo is a git submodule at <feed>/LadderAirport (see .gitmodules).
 LADDER_SRC ?= $(shell \
 	if [ -f "$(CURDIR)/../../LadderAirport/agent/go.mod" ]; then echo "$(CURDIR)/../../LadderAirport"; \
-	elif [ -f "$(CURDIR)/../../../LadderAirport/agent/go.mod" ]; then echo "$(CURDIR)/../../../LadderAirport"; \
 	elif [ -f "$(TOPDIR)/LadderAirport/agent/go.mod" ]; then echo "$(TOPDIR)/LadderAirport"; \
 	else echo ""; fi)
 
@@ -51,9 +50,8 @@ AGENT_TAGS:=with_quic,with_utls
 
 define Build/Prepare
 	@if [ -z "$(LADDER_SRC)" ] || [ ! -f "$(LADDER_SRC)/agent/go.mod" ]; then \
-		echo "ERROR: LADDER_SRC must point at LadderAirport monorepo (got '$(LADDER_SRC)')"; \
-		echo "CI checks out Jlan45/LadderAirport into the feed as ./LadderAirport"; \
-		echo "Locally clone it next to this feed or set LADDER_SRC="; \
+		echo "ERROR: LADDER_SRC must point at LadderAirport submodule (got '$(LADDER_SRC)')"; \
+		echo "Run: git submodule update --init LadderAirport && git -C LadderAirport submodule update --init agent/frp agent/sing-box"; \
 		exit 1; \
 	fi
 	rm -rf $(PKG_BUILD_DIR)

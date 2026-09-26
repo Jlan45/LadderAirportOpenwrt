@@ -69,14 +69,17 @@ jobs:
         with:
           path: feed
           fetch-depth: 0
+          submodules: false
 
-      - name: Checkout LadderAirport
-        uses: actions/checkout@v4
-        with:
-          repository: Jlan45/LadderAirport
-          path: feed/LadderAirport
-          submodules: recursive
-          fetch-depth: 0
+      - name: Init LadderAirport submodule (agent deps only)
+        working-directory: feed
+        run: |
+          set -euo pipefail
+          git submodule update --init LadderAirport
+          git -C LadderAirport submodule update --init agent/frp agent/sing-box
+          test -f LadderAirport/agent/go.mod
+          test -d LadderAirport/agent/sing-box
+          test -d LadderAirport/agent/frp
 
       - name: Resolve package version
         id: ver
@@ -88,6 +91,7 @@ jobs:
             VER="$(git -C LadderAirport describe --tags --always 2>/dev/null | sed 's/^v//' | tr '_' '-')"
           fi
           echo "pkg_version=${VER:-0.0.0}" >> "$GITHUB_OUTPUT"
+          echo "LadderAirport=$(git -C LadderAirport rev-parse --short HEAD)"
 
       - name: Build with OpenWrt SDK
         uses: openwrt/gh-action-sdk@v11
@@ -115,7 +119,6 @@ jobs:
     name: Aggregate feed and release
     needs: build
     runs-on: ubuntu-latest
-    # Tag pushes always publish; workflow_dispatch only builds (same as main LadderAirport release).
     if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
     steps:
       - name: Download all artifacts
@@ -127,7 +130,6 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p dist
-          # artifacts/ladder-agent-<arch>/* → dist/<arch>/ladderairport/*
           for dir in artifacts/ladder-agent-*; do
             [ -d "$dir" ] || continue
             arch="${dir#artifacts/ladder-agent-}"
@@ -140,7 +142,6 @@ jobs:
           tar -czf ../ladderairport-openwrt-feed.tar.gz .
           cd ..
           sha256sum ladderairport-openwrt-feed.tar.gz MANIFEST.txt > SHA256SUMS.txt
-          # Per-arch tarballs for opkg src/gz URL convenience
           mkdir -p per-arch
           for archdir in dist/*; do
             [ -d "$archdir" ] || continue

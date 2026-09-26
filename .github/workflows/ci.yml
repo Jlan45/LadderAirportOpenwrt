@@ -74,14 +74,19 @@ jobs:
         with:
           path: feed
           fetch-depth: 0
+          # LadderAirport is a git submodule of this feed; nested sing-box/frp
+          # needed for build. Skip sing-box clients/* (android/apple) below.
+          submodules: false
 
-      - name: Checkout LadderAirport
-        uses: actions/checkout@v4
-        with:
-          repository: Jlan45/LadderAirport
-          path: feed/LadderAirport
-          submodules: recursive
-          fetch-depth: 0
+      - name: Init LadderAirport submodule (agent deps only)
+        working-directory: feed
+        run: |
+          set -euo pipefail
+          git submodule update --init LadderAirport
+          git -C LadderAirport submodule update --init agent/frp agent/sing-box
+          test -f LadderAirport/agent/go.mod
+          test -d LadderAirport/agent/sing-box
+          test -d LadderAirport/agent/frp
 
       - name: Resolve package version
         id: ver
@@ -90,6 +95,7 @@ jobs:
           VER="$(git -C LadderAirport describe --tags --always 2>/dev/null | sed 's/^v//' | tr '_' '-')"
           echo "pkg_version=${VER:-0.0.0-ci}" >> "$GITHUB_OUTPUT"
           echo "Building ladder-agent PKG_VERSION=${VER:-0.0.0-ci} arch=${{ matrix.arch }}"
+          echo "LadderAirport=$(git -C LadderAirport rev-parse --short HEAD)"
 
       - name: Build with OpenWrt SDK
         uses: openwrt/gh-action-sdk@v11
@@ -102,7 +108,6 @@ jobs:
           V: s
           NO_SHFMT_CHECK: 1
           NO_REFRESH_CHECK: 1
-          # origin=environment overrides package Makefile default.
           PKG_VERSION: ${{ steps.ver.outputs.pkg_version }}
 
       - name: Upload packages

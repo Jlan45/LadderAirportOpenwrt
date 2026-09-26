@@ -4,21 +4,30 @@
 
 需要 Panel **支持 agent enroll / uplink** 的版本（与主仓文档一致）。
 
-## 仓库关系
+## 仓库关系（git submodule）
 
-本仓只包含 OpenWrt 包定义与 CI，**不** vendoring 主仓源码：
+主仓通过 **Git submodule** 挂在本仓目录 `LadderAirport/`（GitHub 上该目录会显示为指向 `Jlan45/LadderAirport` 的子模块，不是拷贝源码）：
 
-| 场景 | `LADDER_SRC` |
-|------|----------------|
-| 本地（与主仓并列） | 默认 `../LadderAirport` |
-| CI | checkout 到 feed 内 `./LadderAirport`（recursive submodules） |
+```text
+LadderAirportOpenwrt/
+  .gitmodules              # LadderAirport → https://github.com/Jlan45/LadderAirport.git
+  LadderAirport/           # submodule（再含 agent/sing-box、agent/frp）
+  net/ladder-agent/        # OpenWrt 包
+```
+
+克隆：
 
 ```bash
-# 推荐布局
-~/LadderAirport          # 主仓
-~/LadderAirportOpenwrt   # 本仓
-cd ~/LadderAirportOpenwrt && make check-src
+git clone --recurse-submodules https://github.com/Jlan45/LadderAirportOpenwrt.git
+# 或已 clone 后：
+cd LadderAirportOpenwrt && make sync-submodule
+# 等价于：git submodule update --init --recursive
+# 构建只需主仓 + frp/sing-box；CI 不会拉 sing-box 的 android/apple 客户端子模块
 ```
+
+升级主仓指针：进入 `LadderAirport/` 拉到目标 commit/tag，回到本仓提交 submodule 指针更新。
+
+`make check-src` 校验 submodule 已就绪；包 Makefile 的 `LADDER_SRC` 默认指向 `./LadderAirport`。
 
 ## 安装（Release 软件源）
 
@@ -83,15 +92,10 @@ uci commit ladder-agent
 
 ## 本地 / 固件集成
 
-将本仓加入 `feeds.conf`：
-
-```text
-src-link ladderairport /home/you/LadderAirportOpenwrt
-```
-
-并保证 `LADDER_SRC` 能找到主仓（并列 clone 或 CI 式放在 feed 根目录 `LadderAirport/`）：
-
 ```bash
+git clone --recurse-submodules https://github.com/Jlan45/LadderAirportOpenwrt.git
+# feeds.conf:
+# src-link ladderairport /path/to/LadderAirportOpenwrt
 ./scripts/feeds update ladderairport
 ./scripts/feeds install ladder-agent
 make package/ladder-agent/compile V=s
@@ -101,10 +105,11 @@ make package/ladder-agent/compile V=s
 
 - **分支目标**：OpenWrt `24.10`（`.ipk`）
 - **工具**：[`openwrt/gh-action-sdk@v11`](https://github.com/openwrt/gh-action-sdk)
+- **源码**：checkout 本仓后 `git submodule update --init LadderAirport`，再 init `agent/frp`、`agent/sing-box`
 - **包名 / feed 名**：`ladder-agent` / `ladderairport`
-- **架构**：全路由矩阵（aarch64 / arm / x86 / mips / loongarch64 / riscv64 / powerpc…），`fail-fast: false`，并发上限 8
+- **架构**：全路由矩阵，`fail-fast: false`，并发上限 8
 - **触发**：push/PR → CI artifacts；推送 `v*` tag → 聚合 feed 并发布 GitHub Release
-- **签名（可选）**：仓库 secret `KEY_BUILD`（usign）供 release workflow 使用
+- **签名（可选）**：仓库 secret `KEY_BUILD`（usign）
 
 构建 tags 与主仓一致：`with_quic,with_utls`；`GOTOOLCHAIN=auto` 以匹配主仓 `go 1.26.x`。
 
@@ -115,13 +120,15 @@ make package/ladder-agent/compile V=s
 ## 目录
 
 ```text
+.gitmodules
+LadderAirport/                 # submodule → Jlan45/LadderAirport
 net/ladder-agent/
-  Makefile                 OpenWrt 包定义（链接 LADDER_SRC）
+  Makefile
   files/
-    ladder-agent.init      procd
-    ladder-agent.config    UCI 默认
-    ladder-agent.keep      sysupgrade 保留路径
-    enroll.sh              uplink 一次性注册
+    ladder-agent.init
+    ladder-agent.config
+    ladder-agent.keep
+    enroll.sh
 .github/workflows/
   ci.yml
   release.yml

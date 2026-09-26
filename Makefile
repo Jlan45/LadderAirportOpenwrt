@@ -1,35 +1,39 @@
 # Local helpers for the LadderAirport OpenWrt feed.
 # Formal package build uses OpenWrt SDK (see .github/workflows).
 
-.PHONY: check-src help
+.PHONY: check-src help sync-submodule
 
-LADDER_SRC ?= $(abspath ../LadderAirport)
+# Main monorepo is linked as a git submodule at ./LadderAirport
+LADDER_SRC ?= $(CURDIR)/LadderAirport
 
 help:
 	@echo "LadderAirport OpenWrt feed"
 	@echo ""
-	@echo "  make check-src          Verify LADDER_SRC points at the main monorepo"
+	@echo "  make check-src          Verify ./LadderAirport submodule is checked out"
+	@echo "  make sync-submodule     git submodule update --init --recursive"
 	@echo "  LADDER_SRC=$(LADDER_SRC)"
 	@echo ""
-	@echo "Add this repo as an OpenWrt feed, then:"
-	@echo "  make package/ladder-agent/compile V=s"
+	@echo "Clone this repo with submodules:"
+	@echo "  git clone --recurse-submodules https://github.com/Jlan45/LadderAirportOpenwrt.git"
 	@echo ""
 	@echo "CI builds all router architectures with openwrt/gh-action-sdk."
 
+sync-submodule:
+	git submodule update --init --recursive
+
 check-src:
 	@test -f "$(LADDER_SRC)/agent/go.mod" || { \
-		echo "LADDER_SRC missing agent/go.mod: $(LADDER_SRC)"; \
-		echo "Clone LadderAirport next to this repo, or set LADDER_SRC="; \
+		echo "missing $(LADDER_SRC)/agent/go.mod — run: make sync-submodule"; \
 		exit 1; \
 	}
 	@test -d "$(LADDER_SRC)/agent/sing-box" || { \
-		echo "LADDER_SRC missing agent/sing-box submodule: $(LADDER_SRC)"; \
-		echo "Run: git -C $(LADDER_SRC) submodule update --init --recursive"; \
+		echo "missing sing-box under submodule — run: make sync-submodule"; \
 		exit 1; \
 	}
 	@test -d "$(LADDER_SRC)/pkg" -a -d "$(LADDER_SRC)/proto" || { \
-		echo "LADDER_SRC missing pkg/ or proto/: $(LADDER_SRC)"; \
+		echo "missing pkg/ or proto/ under $(LADDER_SRC)"; \
 		exit 1; \
 	}
-	@echo "OK: LADDER_SRC=$(LADDER_SRC)"
+	@echo "OK: LADDER_SRC=$(LADDER_SRC) (git submodule)"
 	@git -C "$(LADDER_SRC)" describe --tags --always 2>/dev/null || true
+	@git -C "$(LADDER_SRC)" rev-parse --short HEAD 2>/dev/null || true

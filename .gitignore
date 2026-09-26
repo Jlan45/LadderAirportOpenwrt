@@ -8,9 +8,6 @@ logs/
 *.apk
 dl/
 
-# Local LadderAirport checkout (CI places it; do not commit)
-LadderAirport/
-
 # Editor / OS
 *~
 .DS_Store
