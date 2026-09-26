@@ -48,6 +48,8 @@ opkg install ladder-agent luci-app-ladder-agent
 
 安装 LuCI 包后，在 **服务 → LadderAirport** 里配置节点并查看运行状态（需已安装 `luci`）。
 
+未签名软件源时，按 OpenWrt 文档允许未校验安装（生产环境建议配置 `KEY_BUILD` 签名，见下方 CI）。
+
 ## LuCI
 
 包 `luci-app-ladder-agent`（依赖 `ladder-agent` + `luci-base`）：
@@ -118,7 +120,7 @@ make package/ladder-agent/compile V=s
 - **工具**：[`openwrt/gh-action-sdk@v11`](https://github.com/openwrt/gh-action-sdk)
 - **源码**：checkout 本仓后 `git submodule update --init LadderAirport`，再 init `agent/frp`、`agent/sing-box`
 - **包名 / feed 名**：`ladder-agent`、`luci-app-ladder-agent` / `ladderairport`
-- **架构**：全路由矩阵，`fail-fast: false`，并发上限 8
+- **架构**：暂时仅 `aarch64_generic` 与 `x86_64`，`fail-fast: false`，并发上限 8
 - **触发**：push/PR → CI artifacts；推送 `v*` tag → 聚合 feed 并发布 GitHub Release
 - **签名（可选）**：仓库 secret `KEY_BUILD`（usign）
 
