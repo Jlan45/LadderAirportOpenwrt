@@ -1,0 +1,35 @@
+{
+	"admin/services/ladder-agent": {
+		"title": "LadderAirport",
+		"order": 80,
+		"action": {
+			"type": "firstchild"
+		},
+		"depends": {
+			"acl": [ "luci-app-ladder-agent" ],
+			"uci": { "ladder-agent": true }
+		}
+	},
+	"admin/services/ladder-agent/status": {
+		"title": "Status",
+		"order": 1,
+		"action": {
+			"type": "view",
+			"path": "ladder-agent/status"
+		},
+		"depends": {
+			"acl": [ "luci-app-ladder-agent" ]
+		}
+	},
+	"admin/services/ladder-agent/config": {
+		"title": "Configuration",
+		"order": 2,
+		"action": {
+			"type": "view",
+			"path": "ladder-agent/config"
+		},
+		"depends": {
+			"acl": [ "luci-app-ladder-agent" ]
+		}
+	}
+}

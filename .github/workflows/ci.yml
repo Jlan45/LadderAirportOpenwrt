@@ -16,7 +16,7 @@ concurrency:
 env:
   OPENWRT_RELEASE: openwrt-24.10
   FEEDNAME: ladderairport
-  PACKAGES: ladder-agent
+  PACKAGES: ladder-agent luci-app-ladder-agent
 
 jobs:
   build:
