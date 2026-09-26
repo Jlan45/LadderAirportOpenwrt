@@ -27,46 +27,8 @@ jobs:
       max-parallel: 8
       matrix:
         arch:
-          # aarch64
-          - aarch64_cortex-a53
-          - aarch64_cortex-a72
-          - aarch64_cortex-a76
           - aarch64_generic
-          # arm
-          - arm_arm1176jzf-s_vfp
-          - arm_arm926ej-s
-          - arm_cortex-a15_neon-vfpv4
-          - arm_cortex-a5_vfpv4
-          - arm_cortex-a7
-          - arm_cortex-a7_neon-vfpv4
-          - arm_cortex-a7_vfpv4
-          - arm_cortex-a8_vfpv3
-          - arm_cortex-a9
-          - arm_cortex-a9_neon
-          - arm_cortex-a9_vfpv3-d16
-          - arm_fa526
-          - arm_xscale
-          # x86
-          - i386_pentium-mmx
-          - i386_pentium4
           - x86_64
-          # mips
-          - mips_24kc
-          - mips_4kec
-          - mips_mips32
-          - mipsel_24kc
-          - mipsel_24kc_24kf
-          - mipsel_74kc
-          - mipsel_mips32
-          - mips64_mips64r2
-          - mips64_octeonplus
-          - mips64el_mips64r2
-          # other
-          - loongarch64_generic
-          - riscv64_generic
-          - powerpc_464fp
-          - powerpc_8548
-          - powerpc64_e5500
 
     steps:
       - name: Checkout OpenWrt feed
