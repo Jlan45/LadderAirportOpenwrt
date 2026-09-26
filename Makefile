@@ -14,7 +14,7 @@ help:
 	@echo "  LADDER_SRC=$(LADDER_SRC)"
 	@echo ""
 	@echo "Clone this repo with submodules:"
-	@echo "  git clone --recurse-submodules https://github.com/Jlan45/LadderAirportOpenwrt.git"
+	@echo "  git clone --recurse-submodules https://github.com/LadderAirport/LadderAirportOpenwrt.git"
 	@echo ""
 	@echo "CI builds all router architectures with openwrt/gh-action-sdk."
 
