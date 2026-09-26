@@ -28,6 +28,7 @@ jobs:
       matrix:
         # Temporarily only arm64 (aarch64) + x86_64
         arch:
+          - aarch64_cortex-a53
           - aarch64_generic
           - x86_64
 
