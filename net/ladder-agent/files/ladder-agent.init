@@ -1,0 +1,90 @@
+#!/bin/sh /etc/rc.common
+
+USE_PROCD=1
+START=99
+STOP=10
+PROG="/usr/bin/ladder-agent"
+ENROLL="/usr/libexec/ladder-agent/enroll.sh"
+
+start_service() {
+	config_load "ladder-agent"
+
+	local enabled panel_url node_id token enroll_token
+	local listen data_dir uplink uplink_serve_grpc uplink_ws
+	local report_address tls_sans log_stderr
+
+	config_get_bool enabled "main" "enabled" "0"
+	[ "$enabled" -eq 1 ] || return 0
+
+	config_get panel_url "main" "panel_url" ""
+	config_get node_id "main" "node_id" ""
+	config_get token "main" "token" ""
+	config_get enroll_token "main" "enroll_token" ""
+	config_get listen "main" "listen" "0.0.0.0:50051"
+	config_get data_dir "main" "data_dir" "/var/lib/ladder-agent"
+	config_get_bool uplink "main" "uplink" "1"
+	config_get_bool uplink_serve_grpc "main" "uplink_serve_grpc" "0"
+	config_get_bool uplink_ws "main" "uplink_ws" "1"
+	config_get report_address "main" "report_address" ""
+	config_get tls_sans "main" "tls_sans" ""
+	config_get_bool log_stderr "main" "log_stderr" "1"
+
+	[ -n "$panel_url" ] || {
+		echo "ladder-agent: panel_url is required" >&2
+		return 1
+	}
+	[ -n "$node_id" ] || {
+		echo "ladder-agent: node_id is required" >&2
+		return 1
+	}
+
+	# Exchange one-time enroll_token for long-lived control token when needed.
+	if [ -z "$token" ] && [ -n "$enroll_token" ]; then
+		if [ -x "$ENROLL" ]; then
+			"$ENROLL" || return 1
+			config_load "ladder-agent"
+			config_get token "main" "token" ""
+		fi
+	fi
+
+	[ -n "$token" ] || {
+		echo "ladder-agent: token (or enroll_token) is required" >&2
+		return 1
+	}
+
+	mkdir -p "$data_dir"
+
+	procd_open_instance
+	procd_set_param command "$PROG"
+	procd_append_param command -listen="$listen"
+	procd_append_param command -data-dir="$data_dir"
+	procd_append_param command -panel-url="$panel_url"
+	procd_append_param command -node-id="$node_id"
+	[ -n "$report_address" ] && procd_append_param command -report-address="$report_address"
+	[ -n "$tls_sans" ] && procd_append_param command -tls-sans="$tls_sans"
+
+	if [ "$uplink" -eq 1 ]; then
+		procd_append_param command -uplink
+		[ "$uplink_serve_grpc" -eq 1 ] && procd_append_param command -uplink-serve-grpc
+	fi
+
+	# Token via environment so it does not appear on the command line.
+	procd_set_param env "LADDER_TOKEN=$token"
+	[ "$uplink" -eq 1 ] && [ "$uplink_ws" -eq 0 ] && \
+		procd_append_param env "LADDER_UPLINK_WS=0"
+
+	procd_set_param file /etc/config/ladder-agent
+	procd_set_param stderr "$log_stderr"
+	procd_set_param respawn
+	procd_set_param limits nofile="1000000 1000000"
+	procd_close_instance
+}
+
+service_triggers() {
+	procd_add_reload_trigger "ladder-agent"
+}
+
+reload_service() {
+	stop
+	start
+}

@@ -1,0 +1,18 @@
+# Build / SDK leftovers
+bin/
+build_dir/
+staging_dir/
+tmp/
+logs/
+*.ipk
+*.apk
+dl/
+
+# Local LadderAirport checkout (CI places it; do not commit)
+LadderAirport/
+
+# Editor / OS
+*~
+.DS_Store
+.idea/
+.vscode/

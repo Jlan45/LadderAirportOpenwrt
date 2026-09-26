@@ -1,0 +1,114 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: openwrt-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  OPENWRT_RELEASE: openwrt-24.10
+  FEEDNAME: ladderairport
+  PACKAGES: ladder-agent
+
+jobs:
+  build:
+    name: ${{ matrix.arch }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      max-parallel: 8
+      matrix:
+        arch:
+          # aarch64
+          - aarch64_cortex-a53
+          - aarch64_cortex-a72
+          - aarch64_cortex-a76
+          - aarch64_generic
+          # arm
+          - arm_arm1176jzf-s_vfp
+          - arm_arm926ej-s
+          - arm_cortex-a15_neon-vfpv4
+          - arm_cortex-a5_vfpv4
+          - arm_cortex-a7
+          - arm_cortex-a7_neon-vfpv4
+          - arm_cortex-a7_vfpv4
+          - arm_cortex-a8_vfpv3
+          - arm_cortex-a9
+          - arm_cortex-a9_neon
+          - arm_cortex-a9_vfpv3-d16
+          - arm_fa526
+          - arm_xscale
+          # x86
+          - i386_pentium-mmx
+          - i386_pentium4
+          - x86_64
+          # mips
+          - mips_24kc
+          - mips_4kec
+          - mips_mips32
+          - mipsel_24kc
+          - mipsel_24kc_24kf
+          - mipsel_74kc
+          - mipsel_mips32
+          - mips64_mips64r2
+          - mips64_octeonplus
+          - mips64el_mips64r2
+          # other
+          - loongarch64_generic
+          - riscv64_generic
+          - powerpc_464fp
+          - powerpc_8548
+          - powerpc64_e5500
+
+    steps:
+      - name: Checkout OpenWrt feed
+        uses: actions/checkout@v4
+        with:
+          path: feed
+          fetch-depth: 0
+
+      - name: Checkout LadderAirport
+        uses: actions/checkout@v4
+        with:
+          repository: Jlan45/LadderAirport
+          path: feed/LadderAirport
+          submodules: recursive
+          fetch-depth: 0
+
+      - name: Resolve package version
+        id: ver
+        working-directory: feed
+        run: |
+          VER="$(git -C LadderAirport describe --tags --always 2>/dev/null | sed 's/^v//' | tr '_' '-')"
+          echo "pkg_version=${VER:-0.0.0-ci}" >> "$GITHUB_OUTPUT"
+          echo "Building ladder-agent PKG_VERSION=${VER:-0.0.0-ci} arch=${{ matrix.arch }}"
+
+      - name: Build with OpenWrt SDK
+        uses: openwrt/gh-action-sdk@v11
+        env:
+          ARCH: ${{ matrix.arch }}-${{ env.OPENWRT_RELEASE }}
+          FEED_DIR: ${{ github.workspace }}/feed
+          FEEDNAME: ${{ env.FEEDNAME }}
+          PACKAGES: ${{ env.PACKAGES }}
+          INDEX: 1
+          V: s
+          NO_SHFMT_CHECK: 1
+          NO_REFRESH_CHECK: 1
+          # origin=environment overrides package Makefile default.
+          PKG_VERSION: ${{ steps.ver.outputs.pkg_version }}
+
+      - name: Upload packages
+        uses: actions/upload-artifact@v4
+        with:
+          name: ladder-agent-${{ matrix.arch }}
+          path: bin/packages/${{ matrix.arch }}/${{ env.FEEDNAME }}/
+          if-no-files-found: error
+          retention-days: 14
