@@ -1,16 +1,16 @@
 # LadderAirport OpenWrt
 
-[LadderAirport](https://github.com/Jlan45/LadderAirport) 节点 Agent 的 OpenWrt 软件源（feed）。用官方 SDK 为常见路由架构编译 `ladder-agent` `.ipk`，默认以 **uplink** 模式接入 Panel（NAT 友好，对齐 Android 节点）。
+[LadderAirport](https://github.com/LadderAirport/LadderAirport) 节点 Agent 的 OpenWrt 软件源（feed）。用官方 SDK 为常见路由架构编译 `ladder-agent` `.ipk`，默认以 **uplink** 模式接入 Panel（NAT 友好，对齐 Android 节点）。
 
 需要 Panel **支持 agent enroll / uplink** 的版本（与主仓文档一致）。
 
 ## 仓库关系（git submodule）
 
-主仓通过 **Git submodule** 挂在本仓目录 `LadderAirport/`（GitHub 上该目录会显示为指向 `Jlan45/LadderAirport` 的子模块，不是拷贝源码）：
+主仓通过 **Git submodule** 挂在本仓目录 `LadderAirport/`（GitHub 上该目录会显示为指向 `LadderAirport/LadderAirport` 的子模块，不是拷贝源码）：
 
 ```text
 LadderAirportOpenwrt/
-  .gitmodules              # LadderAirport → https://github.com/Jlan45/LadderAirport.git
+  .gitmodules              # LadderAirport → https://github.com/LadderAirport/LadderAirport.git
   LadderAirport/           # submodule（再含 agent/sing-box、agent/frp）
   net/ladder-agent/        # OpenWrt 包
 ```
@@ -18,7 +18,7 @@ LadderAirportOpenwrt/
 克隆：
 
 ```bash
-git clone --recurse-submodules https://github.com/Jlan45/LadderAirportOpenwrt.git
+git clone --recurse-submodules https://github.com/LadderAirport/LadderAirportOpenwrt.git
 # 或已 clone 后：
 cd LadderAirportOpenwrt && make sync-submodule
 # 等价于：git submodule update --init --recursive
@@ -31,7 +31,7 @@ cd LadderAirportOpenwrt && make sync-submodule
 
 ## 安装（Release 软件源）
 
-1. 在 [Releases](https://github.com/Jlan45/LadderAirportOpenwrt/releases) 找到对应架构（路由器 `opkg print-architecture` 或看固件 arch）。
+1. 在 [Releases](https://github.com/LadderAirport/LadderAirportOpenwrt/releases) 找到对应架构（路由器 `opkg print-architecture` 或看固件 arch）。
 2. 添加自定义源（示例用完整 feed 归档解压后的 HTTP 目录，或单架构包 URL）：
 
 ```bash
@@ -104,7 +104,7 @@ uci commit ladder-agent
 ## 本地 / 固件集成
 
 ```bash
-git clone --recurse-submodules https://github.com/Jlan45/LadderAirportOpenwrt.git
+git clone --recurse-submodules https://github.com/LadderAirport/LadderAirportOpenwrt.git
 # feeds.conf:
 # src-link ladderairport /path/to/LadderAirportOpenwrt
 ./scripts/feeds update ladderairport
@@ -132,7 +132,7 @@ make package/ladder-agent/compile V=s
 
 ```text
 .gitmodules
-LadderAirport/                 # submodule → Jlan45/LadderAirport
+LadderAirport/                 # submodule → LadderAirport/LadderAirport
 net/ladder-agent/              # 节点 daemon 包
 luci-app-ladder-agent/         # LuCI 配置 + 状态
   htdocs/.../view/ladder-agent/{status,config}.js

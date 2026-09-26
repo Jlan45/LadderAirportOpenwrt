@@ -9,7 +9,7 @@ LUCI_DEPENDS:=+luci-base +ladder-agent
 LUCI_PKGARCH:=all
 
 PKG_LICENSE:=MIT
-PKG_MAINTAINER:=LadderAirport <https://github.com/Jlan45/LadderAirportOpenwrt>
+PKG_MAINTAINER:=LadderAirport <https://github.com/LadderAirport/LadderAirportOpenwrt>
 
 include $(TOPDIR)/feeds/luci/luci.mk
 

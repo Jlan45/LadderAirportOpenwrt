@@ -17,7 +17,7 @@ ifeq ($(origin PKG_VERSION),undefined)
 endif
 
 PKG_LICENSE:=MIT
-PKG_MAINTAINER:=LadderAirport <https://github.com/Jlan45/LadderAirportOpenwrt>
+PKG_MAINTAINER:=LadderAirport <https://github.com/LadderAirport/LadderAirportOpenwrt>
 
 PKG_BUILD_PARALLEL:=1
 PKG_BUILD_DEPENDS:=golang/host
@@ -33,7 +33,7 @@ define Package/ladder-agent
   SECTION:=net
   CATEGORY:=Network
   TITLE:=LadderAirport node agent (sing-box + FRPS)
-  URL:=https://github.com/Jlan45/LadderAirport
+  URL:=https://github.com/LadderAirport/LadderAirport
   DEPENDS:=$(GO_ARCH_DEPENDS) +ca-bundle +curl +jsonfilter
 endef
 
