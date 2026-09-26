@@ -67,16 +67,22 @@ define Build/Compile
 	# CGO_ENABLED=1. Same-command assignments are last-wins, so the package
 	# overrides must follow GO_PKG_VARS. auto lets the SDK Go 1.23 fetch the
 	# toolchain required by agent/go.mod (go 1.26.4).
+	#
+	# Four dollar signs. This define is expanded once while the stamp
+	# recipe is generated, then again when Make runs the recipe. Two
+	# signs leave a single dollar, which CI's V=s (OpenWrt verbosity)
+	# reads as variable V, so VERSION_LDFLAGS becomes sERSION_LDFLAGS
+	# and the git command substitution is dropped.
 	( \
-		SINGBOX_VER=$$(git -C "$(PKG_BUILD_DIR)/agent/sing-box" describe --tags 2>/dev/null | sed 's/^v//' || echo unknown); \
+		SINGBOX_VER=$$$$(git -C "$(PKG_BUILD_DIR)/agent/sing-box" describe --tags 2>/dev/null | sed 's/^v//' || echo unknown); \
 		VERSION_LDFLAGS="-X 'github.com/ladderairport/agent/internal/version.Version=$(PKG_VERSION)'"; \
-		VERSION_LDFLAGS="$$VERSION_LDFLAGS -X 'github.com/sagernet/sing-box/constant.Version=$$SINGBOX_VER'"; \
+		VERSION_LDFLAGS="$$$$VERSION_LDFLAGS -X 'github.com/sagernet/sing-box/constant.Version=$$$$SINGBOX_VER'"; \
 		cd $(PKG_BUILD_DIR)/agent && \
 		$(GO_PKG_VARS) \
 		CGO_ENABLED=0 GOTOOLCHAIN=auto \
 		go build -trimpath \
 			-tags "$(AGENT_TAGS)" \
-			-ldflags "-s -w $$VERSION_LDFLAGS" \
+			-ldflags "-s -w $$$$VERSION_LDFLAGS" \
 			-o $(PKG_BUILD_DIR)/ladder-agent \
 			./cmd/ladder-agent \
 	)
